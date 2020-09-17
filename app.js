@@ -12,12 +12,8 @@ app.use(bodyparser.json());
 
 app.use('/teachers',teacherRouter);
 
-app.post('/students',(req,res)=>{
-    res.send(req.body);
-});
-
 app.get('/students',studentRouter.getAllStudents);
-app.get('/students:id',studentRouter.getStudentById);
+app.get('/students/:id',studentRouter.getStudentById);
 app.post('/students',studentRouter.insertStudent);
 app.delete('/students',studentRouter.deleteStudent);
 app.put('/students',studentRouter.updateStudent);

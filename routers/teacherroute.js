@@ -1,44 +1,95 @@
 let express = require('express');
-let router = express.Router();
-let mongoose = require('mongoose');
-const Teacher = require('../models/teacher');
 
-router.get('/',(req,res)=>{
-    res.send('Connected /');
+let router = express.Router();
+let Teacher = require('../models/teacher');
+let mongoose = require('mongoose');
+
+// get all teachers
+router.get('/', (req, res) => {
+    Teacher.find({}, 'fullName', function (err, data) {
+        res.send(data);
+    });
+
 });
 
-router.get('/:id',(req,res)=>{
-    Teacher.find({_id: mongoose.Types.ObjectId(req.params.id)},'fullName',(err,data)=>{
+// get Teacher's details by ID
+// localhost:8080/teachers/132465798
+router.get('/:id', (req, res) => {
+    Teacher.find({
+        _id: mongoose.Types.ObjectId(req.params.id)
+    }).populate('students').exec(function (err, data) {
         res.json(data);
     });
-});
+})
 
-router.post('/',(req,res)=>{
+// insert new Teacher
+router.post('/', (req, res) => {
+    let teacherDetails = req.body;
     let teacher = new Teacher({
-        _id:new mongoose.Types.ObjectId(),
-        fullName:req.body.fullName,
-        school:req.body.school
+        _id: new mongoose.Types.ObjectId(),
+        fullName: teacherDetails.fullName,
+        school: teacherDetails.school
     });
-    teacher.save((err)=>{
-        if(!err){
+
+    teacher.save(function (err) {
+        if (!err) {
             res.json('Done');
         } else {
             res.json(err);
         }
     });
+
 });
 
-router.delete('/',(req,res)=>{
-    Teacher.findByIdAndDelete({_id:req.query.id},(err,result)=>{
-        if(!err) res.json('Done');
+
+// delete a teacher by id
+
+router.delete('/', (req, res) => {
+    let teacherId = req.query.id;
+    Teacher.findByIdAndDelete({
+        _id: teacherId
+    }, function (err, result) {
+        if (!err)
+            res.json(result);
         else res.json(err);
-    });
+    })
 });
 
-router.put('/:id',(req,res)=>{
-    Teacher.findByIdAndUpdate({id_:req.params.id},{$set:{"school":req.body.school}},{upsert:false},(err,obj)=>{
-        if(!err) res.json(obj);
-    });
+router.put('/:id', (req, res) => {
+    let newSchool = req.body.school;
+    Teacher.findByIdAndUpdate({
+        _id: req.params.id
+    }, {
+        $set: {
+            "school": newSchool
+        }
+    }, {
+        upsert: false
+    }, function (err, data) {
+        if (err) {
+            res.json(err);
+        } else res.json(data);
+    })
 });
 
-module.exports=router;
+router.put('/:tId/students/:sId', (req, res) => {
+    let newStudentId = req.params.sId;
+    let teacherId = req.params.tId;
+    Teacher.findByIdAndUpdate({
+        _id: teacherId
+    }, {
+        $push: {
+            "students": mongoose.Types.ObjectId(newStudentId)
+        }
+    }, {
+        upsert: false
+    }, function (err, data) {
+        if (err) {
+            res.json(err);
+        } else res.json(data);
+    })
+
+
+})
+
+module.exports = router;

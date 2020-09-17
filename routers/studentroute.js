@@ -1,43 +1,79 @@
-const { mongoose } = require('mongoose');
-const Student = require('../models/student');
-module.exports={
-    getAllStudents: (req,res)=>{
-        Student.find({},'fullName',(err,obj)=>{
+let Student = require('../models/student');
+let mongoose = require('mongoose');
+
+module.exports = {
+    getAllStudents: function (req, res) {
+        Student.find({}, 'fullName', function (err, data) {
             res.json(data);
         });
     },
 
-    getStudentById: (req,res)=>{
+    getStudentById: function (req, res) {
         Student.find({
             _id: mongoose.Types.ObjectId(req.params.id)
-        },(err,obj)=>{
-            res.json(obj);
-        });
+        }).populate('teachers').exec(function (err, data) {
+            res.json(data);
+        })
     },
-
-    insertStudent: (req,res)=>{
+    insertStudent: function (req, res) {
+        let studentDetails = req.body;
         let student = new Student({
             _id: new mongoose.Types.ObjectId(),
-            fullName: req.body.fullName,
-            age: req.body.age
+            fullName: studentDetails.fullName,
+            age: studentDetails.age
         });
 
-        student.save((err)=>{
-            if(!err) res.json('Done');
+        student.save(function (err) {
+            if (!err) {
+                res.json('Done');
+            } else {
+                res.json(err);
+            }
         });
     },
-    
-    deleteStudent: (req,res)=>{
-        Student.findByIdAndDelete({_id:req.query.id},(err,result)=>{
-            if(!err) res.json('Done');
+    deleteStudent: function (req, res) {
+        let studentId = req.query.id;
+        Student.findByIdAndDelete({
+            _id: studentId
+        }, function (err, result) {
+            if (!err)
+                res.json(result);
             else res.json(err);
-        });
+        })
     },
+    updateStudent: function (req, res) {
+        let newAge = req.body.age;
+        Student.findByIdAndUpdate({
+            _id: req.params.id
+        }, {
+            $set: {
+                "age": newAge
+            }
+        }, {
+            upsert: false
+        }, function (err, data) {
+            if (err) {
+                res.json(err);
+            } else res.json(data);
+        })
+    },
+    addTeacher: function (req, res) {
+        let studentId = req.params.sId;
+        let teacherId = req.params.tId;
+        Student.findByIdAndUpdate({
+            _id: studentId,
+        }, {
+            $push: {
+                "teachers": mongoose.Types.ObjectId(teacherId)
+            }
+        }, {
+            upsert: false
+        }, function (err, data) {
+            if (err) {
+                res.json(err);
+            } else res.json(data);
+        })
 
-    updateStudent:(req,res)=>{
-        Student.findByIdAndUpdate({id_:req.params.id},
-            {$set:{"school":req.body.school}},{upsert:false},(err,obj)=>{
-            if(!err) res.json(obj);
-        });
+
     }
-};
+}
