@@ -17,6 +17,7 @@ mongoose.connect('mongodb://localhost:27017/movies', function (err) {
 //Actor RESTFul endpoionts 
 app.get('/actors', actors.getAll);
 app.post('/actors', actors.createOne);
+app.post('/actors/actors', actors.createMany);
 app.get('/actors/:id', actors.getOne);
 app.put('/actors/:id', actors.updateOne);
 app.post('/actors/:id/movies', actors.addMovie);

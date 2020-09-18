@@ -19,6 +19,19 @@ module.exports = {
             res.json(actor);
         });
     },
+    createMany: function (req, res) {
+        let newActorDetails = req.body;
+        for(let i=0;i<req.body.length;i++){
+        newActorDetails[i]._id = new mongoose.Types.ObjectId();
+        let actor = new Actor(newActorDetails[i]);
+        actor.bYear=2020-Number(newActorDetails[i].currentAge);
+        console.log(actor);
+        if(Number.isInteger(actor.bYear)){
+        actor.save(function (err) {
+            if(err) return res.json(err);
+        });
+        }}
+    },
     getOne: function (req, res) {
         Actor.findOne({ _id: req.params.id })
             .populate('movies')
